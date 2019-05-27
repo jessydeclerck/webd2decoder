@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, abort
 from flask_sockets import Sockets
 from decoder import decoder
 import json
@@ -20,6 +20,11 @@ def decode_from_client():
 @app.route('/decoder/fromserver', methods=['POST'])
 def decode_from_server():
     return jsonify(decoder.readMsg(request.get_data(as_text=True), False))
+
+
+@app.errorhandler(Exception)
+def exception_handler(error):
+    return 'data couldn\'t be read', 400
 
 
 @sockets.route('/decoder')
