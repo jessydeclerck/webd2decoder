@@ -4,6 +4,7 @@ from flask_sockets import Sockets
 from decoder import decoder
 import json
 import logging
+import os
 
 logger = logging.getLogger("webapi")
 
