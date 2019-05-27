@@ -1,2 +1,2 @@
-Django
-gunicorn
+flask
+flask_sockets

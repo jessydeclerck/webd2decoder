@@ -1,9 +1,17 @@
+import logging
+from pathlib import Path
+import random
+from functools import reduce
+import json
 from zlib import decompress
 import struct
 
 """
 Replicate com.ankamagames.jerakine.network.CustomDataWrapper
 """
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("labot")
 
 
 class Data:
@@ -55,7 +63,7 @@ class Data:
         self.verif(l)
         pos = self.pos
         self.pos += l
-        return self.data[pos : pos + l]
+        return self.data[pos: pos + l]
 
     def write(self, l):
         self.data += l
@@ -216,11 +224,6 @@ class Buffer(Data):
 
     def reset(self):
         self.__init__()
-import logging
-
-
-
-logger = logging.getLogger("labot")
 
 
 class Msg:
@@ -274,7 +277,8 @@ class Msg:
             return None
         else:
             if id == 2:
-                logger.debug("Message is NetworkDataContainerMessage! Uncompressing...")
+                logger.debug(
+                    "Message is NetworkDataContainerMessage! Uncompressing...")
                 newbuffer = Buffer(data.readByteArray())
                 newbuffer.uncompress()
                 msg = Msg.fromRaw(newbuffer, from_client)
@@ -321,33 +325,31 @@ class Msg:
         data = write(type_name, json, random_hash=random_hash)
         return Msg(type_id, data, count)
 
-# from js import types, msg_from_id, types_from_id, primitives
-import json
-from functools import reduce
-import logging
-import random
-from zlib import decompress
-from pathlib import Path
 
+# from js import types, msg_from_id, types_from_id, primitives
 currentDirectory = Path(__file__).parent
 
 with open(currentDirectory/"types.json") as jsonfile:
-    print("loading types")
+    logger.info("loading types")
     types = json.loads(jsonfile.read())
 with open(currentDirectory/"msg_from_id.json") as jsonfile:
-    print("loading msg_from_id")
+    logger.info("loading msg_from_id")
     msg_from_id = json.loads(jsonfile.read())
 with open(currentDirectory/"types_from_id.json") as jsonfile:
+    logger.info("loading types_from_id")
     types_from_id = json.loads(jsonfile.read())
 with open(currentDirectory/"primitives.json") as jsonfile:
+    logger.info("loading primitives")
     primitives = json.loads(jsonfile.read())
 
-logger = logging.getLogger("labot")
+logger.info("protocol loaded")
+
 
 primitives = {
     name: (getattr(Data, "read" + name), getattr(Data, "write" + name))
     for name in primitives
 }
+
 
 def readBooleans(boolVars, data):
     ans = {}
@@ -392,7 +394,7 @@ def read(type, data: Data):
 
     logger.debug("reading boolean variables")
     ans.update(readBooleans(type["boolVars"], data))
-    logger.debug("remaining data: %s", data.data[data.pos :])
+    logger.debug("remaining data: %s", data.data[data.pos:])
 
     for var in type["vars"]:
         logger.debug("reading %s", var)
@@ -403,7 +405,7 @@ def read(type, data: Data):
             ans[var["name"]] = readVec(var, data)
         else:
             ans[var["name"]] = read(var["type"], data)
-        logger.debug("remaining data: %s", data.data[data.pos :])
+        logger.debug("remaining data: %s", data.data[data.pos:])
     if type["hash_function"] and data.remaining() == 48:
         ans["hash_function"] = data.read(48)
     return ans
@@ -464,10 +466,6 @@ def write(type, json, data=None, random_hash=True) -> Data:
         data.write(hash)
     return data
 
-import json
-import logging
-
-logging.basicConfig(level=logging.INFO)
 
 def readMsg(hex, from_client):
     data = Buffer(bytearray.fromhex(hex))
