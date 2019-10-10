@@ -313,7 +313,7 @@ class Msg:
         return msg_from_id[str(self.id)]
 
     def json(self):
-        logger.debug("Getting json representation of message %s", self)
+        # logger.debug("Getting json representation of message %s", self)
         if not hasattr(self, "parsed"):
             self.parsed = read(self.msgType, self.data)
         return self.parsed
@@ -364,25 +364,36 @@ def readBooleans(boolVars, data):
 
 
 def readVec(var, data):
+    # ReadUShort to get counts n 
+    logger.debug("Trying to read vec")
+    logger.debug("Count : %s", var["length"])
     assert var["length"] is not None
     if isinstance(var["length"], int):
         n = var["length"]
     else:
         n = read(var["length"], data)
     ans = []
+    logger.debug("Count result: %s", n)
+    logger.debug("Type to read: %s", var["type"])
     for _ in range(n):
         ans.append(read(var["type"], data))
+        logger.debug("tmp vec result %s", ans)
+    logger.debug("readVec result %s", ans)
     return ans
 
 
 def read(type, data: Data):
     if type is False:
-        type = types_from_id[data.readUnsignedShort()]
+        fieldtypeid = data.readUnsignedShort()
+        logger.debug("Field type id: %s", fieldtypeid)
+        logger.debug("get type")
+        type = types_from_id[str(fieldtypeid)]
+        logger.debug("got type %s", type)
     elif isinstance(type, str):
         if type in primitives:
             return primitives[type][0](data)
         type = types[type]
-    logger.debug("reading data %s", data)
+    # logger.debug("reading data %s", data)
     logger.debug("with type %s", type)
 
     if type["parent"] is not None:
@@ -394,7 +405,7 @@ def read(type, data: Data):
 
     logger.debug("reading boolean variables")
     ans.update(readBooleans(type["boolVars"], data))
-    logger.debug("remaining data: %s", data.data[data.pos:])
+    # logger.debug("remaining data: %s", data.data[data.pos:])
 
     for var in type["vars"]:
         logger.debug("reading %s", var)
@@ -405,7 +416,8 @@ def read(type, data: Data):
             ans[var["name"]] = readVec(var, data)
         else:
             ans[var["name"]] = read(var["type"], data)
-        logger.debug("remaining data: %s", data.data[data.pos:])
+        logger.debug("Field %s : %s", var["name"], ans[var["name"]])
+        # logger.debug("remaining data: %s", data.data[data.pos:])
     if type["hash_function"] and data.remaining() == 48:
         ans["hash_function"] = data.read(48)
     return ans

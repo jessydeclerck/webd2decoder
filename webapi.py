@@ -24,6 +24,7 @@ def decode_from_server():
 
 @app.errorhandler(Exception)
 def exception_handler(error):
+    print(error)
     return 'data couldn\'t be read', 400
 
 
