@@ -66,6 +66,8 @@ Endpoints are the following :
 Use the demo app might take some time for the first call as it is hosted on a heroku free plan, which means that the app needs to be started first if it hasn't been used for a while.
 
 A postman collection is also available here : 
+https://www.getpostman.com/collections/435c144a67de71210ba5
+
 ## Protocol builder
 In this project you'll also find a protocol builder which job is to convert AS3 classes to JSON. It also comes from  [LaBot](https://github.com/louisabraham/LaBot project. Some minor modifications have been done just to make the output file readable by the decoder.
 
